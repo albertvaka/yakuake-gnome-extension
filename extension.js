@@ -11,7 +11,7 @@ function init () {
     g_object_path: "/yakuake/window",
     g_interface_name: "org.kde.yakuake"
   });
-  proxy.init(null);
+  this._proxy.init(null);
 }
 
 function enable () {
