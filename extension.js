@@ -4,16 +4,11 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const ExtensionUtils = imports.misc.extensionUtils;
 
 function init () {
-  this._proxy = new Gio.DBusProxy({
-    g_connection: Gio.DBus.session,
-    g_name: "org.kde.yakuake",
-    g_object_path: "/yakuake/window",
-    g_interface_name: "org.kde.yakuake"
-  });
-  this._proxy.init(null);
+  this._proxy = null;
 }
 
 function enable () {
+
   this._wincreated = global.display.connect('window-created', (display, window) => { 
     // Try to detect the Yakuake window somehow
     if (window.title.includes("Yakuake") && window.is_above() && window.is_on_all_workspaces()) {
@@ -26,6 +21,16 @@ function enable () {
     Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
     Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
     () => {
+
+      if (this._proxy == null) {
+        this._proxy = new Gio.DBusProxy({
+          g_connection: Gio.DBus.session,
+          g_name: "org.kde.yakuake",
+          g_object_path: "/yakuake/window",
+          g_interface_name: "org.kde.yakuake"
+        });
+      }
+
       this._proxy.call_sync(
         "org.kde.yakuake.toggleWindowState",
         null, // method args
@@ -43,4 +48,3 @@ function disable () {
   global.display.disconnect(this._wincreated);
   Main.wm.removeKeybinding("my-shortcut");
 }
-
