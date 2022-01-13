@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+
+  <schema id="org.gnome.shell.extensions.yakuake-extension"
+    path="/org/gnome/shell/extensions/yakuake-extension/">
+
+    <key type="as" name="my-shortcut">
+      <default><![CDATA[['F12']]]></default>
+      <summary>Show/Hide yakuake</summary>
+      <description>
+        Hotkey to use to show/hide yakuake
+      </description>
+    </key>
+
+  </schema>
+
+</schemalist>

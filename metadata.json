@@ -1,0 +1,16 @@
+{
+    "description": "Extension to allow yakuake to raise above other windos", 
+    "name": "Yakuake", 
+    "shell-version": [
+      "3.30",
+      "3.32",
+      "3.34",
+      "3.36",
+      "3.38",
+      "40",
+      "41"
+    ], 
+    "url": "https://github.com/albertvaka/yakuake-gnome-extension", 
+    "uuid": "yakuake-extension@kde.org"
+  }
+  
