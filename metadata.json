@@ -1,8 +1,8 @@
 {
-  "description": "Extension to allow yakuake to raise above other windos", 
+  "description": "A Gnome shell extension to use Yakuake on Gnome. Adds a global shortcut to show/hide yakuake and makes the console appear focussed.",
   "name": "Yakuake",
   "version": 1,
-  "shell-version": [ "40", "41" ], 
-  "url": "https://github.com/albertvaka/yakuake-gnome-extension", 
+  "shell-version": [ "40", "41" ],
+  "url": "https://github.com/albertvaka/yakuake-gnome-extension",
   "uuid": "yakuake-extension@kde.org"
 }
