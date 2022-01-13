@@ -2,7 +2,6 @@ const {Gio, Shell, Meta} = imports.gi;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const ExtensionUtils = imports.misc.extensionUtils;
-const Lang = imports.lang
 
 function init () {
   this._proxy = new Gio.DBusProxy({
