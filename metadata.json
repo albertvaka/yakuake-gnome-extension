@@ -1,5 +1,5 @@
 {
-  "description": "A Gnome shell extension to use Yakuake on Gnome. Adds a global shortcut to show/hide yakuake and makes the console appear focussed.",
+  "description": "A Gnome shell extension to use Yakuake on Gnome. Adds a global shortcut to show/hide yakuake. Assumes QT_QPA_PLATFORM=wayland is set in ~/.pam_environment",
   "name": "Yakuake",
   "version": 4,
   "shell-version": [ "40", "41", "42" ],
