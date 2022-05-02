@@ -9,12 +9,13 @@ function init () {
 
 function enable () {
 
-//  this._wincreated = global.display.connect('window-created', (display, window) => { 
-//    // Try to detect the Yakuake window somehow
-//    if (window.title.includes("Yakuake") && window.is_above() && window.is_on_all_workspaces()) {
-//      Main.activateWindow(window);
-//    }
-//  });
+  // This is needed in XWayland (ie: if QT_QPA_PLATFORM=wayland is not set) so the window gets focus
+  this._wincreated = global.display.connect('window-created', (display, window) => { 
+    // Try to detect the Yakuake window somehow
+    if (window.title.includes("Yakuake") && window.is_above() && window.is_on_all_workspaces()) {
+      Main.activateWindow(window);
+    }
+  });
 
   let settings = ExtensionUtils.getSettings("org.gnome.shell.extensions.yakuake-extension");
   Main.wm.addKeybinding("my-shortcut", settings,
@@ -45,6 +46,6 @@ function enable () {
 }
 
 function disable () {
-//  global.display.disconnect(this._wincreated);
+  global.display.disconnect(this._wincreated);
   Main.wm.removeKeybinding("my-shortcut");
 }
