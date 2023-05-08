@@ -2,7 +2,7 @@
   "description": "A Gnome shell extension to use Yakuake on Gnome. Adds a global shortcut to show/hide yakuake and makes the console appear focussed.",
   "name": "Yakuake",
   "version": 7,
-  "shell-version": [ "40", "41", "42", "43" ],
+  "shell-version": [ "40", "41", "42", "43", "44" ],
   "url": "https://github.com/albertvaka/yakuake-gnome-extension",
   "uuid": "yakuake-extension@kde.org"
 }
