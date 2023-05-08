@@ -10,9 +10,9 @@ function init () {
 function enable () {
 
   // This is needed in XWayland (ie: if QT_QPA_PLATFORM=wayland is not set) so the window gets focus
-  this._wincreated = global.display.connect('window-created', (display, window) => { 
+  this._wincreated = global.display.connect('window-demands-attention', (display, window) => {
     // Try to detect the Yakuake window somehow
-    if (window.title.includes("Yakuake") && window.is_above() && window.is_on_all_workspaces()) {
+    if (window.title.includes("Yakuake") && window.is_above()) {
       Main.activateWindow(window);
     }
   });
