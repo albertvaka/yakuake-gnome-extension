@@ -1,44 +1,38 @@
-const Gtk = imports.gi.Gtk;
-const GLib = imports.gi.GLib;
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
+import Adw from 'gi://Adw';
+import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
 
-function init() {
-}
+export default class YakuakeGnomeExtensionPreferences extends ExtensionPreferences {
 
-function buildPrefsWidget() {
+    fillPreferencesWindow(window) {
+        this.settings = window._settings = this.getSettings("org.gnome.shell.extensions.yakuake-extension");
 
-    this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.yakuake-extension');
+        const page = new Adw.PreferencesPage({
+            title: 'Yakuake Gnome Extension',
+            icon_name: 'dialog-information-symbolic',
+        });
+        window.add(page);
 
-    // Create a parent widget that we'll return from this function
-    let prefsWidget = new Gtk.Grid({
-        column_spacing: 2,
-        row_spacing: 1,
-        visible: true
-    });
+        const group = new Adw.PreferencesGroup({
+            title: 'Shortcut',
+            description: 'Configure the shortcut to open Yakuake',
+        });
+        page.add(group);
 
-    let label = new Gtk.Label({
-        label: 'Shortcut:',
-        halign: Gtk.Align.START,
-        visible: true
-    });
-    prefsWidget.attach(label, 0, 1, 1, 1);
+        let entry = new Gtk.Entry({
+            halign: Gtk.Align.END,
+            visible: true
+        });
 
-    let entry = new Gtk.Entry({
-        halign: Gtk.Align.END,
-        visible: true
-    });
-    
-    let shortcut = this.settings.get_value('my-shortcut').deep_unpack()
-    entry.set_text(shortcut[0]);
+        let shortcut = this.settings.get_value('my-shortcut').deep_unpack()
+        entry.set_text(shortcut[0]);
 
-    prefsWidget.attach(entry, 1, 1, 1, 1);
+        entry.connect('changed', () => {
+            this.settings.set_value('my-shortcut', GLib.Variant.new('as', [entry.get_text()]));
+        });
 
-    entry.connect('changed', () => {
-        this.settings.set_value('my-shortcut', GLib.Variant.new('as', [entry.get_text()]));
-    });
-
-    // Return our widget which will be added to the window
-    return prefsWidget;
+        group.add(entry);
+    }
 }
