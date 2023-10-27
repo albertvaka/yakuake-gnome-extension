@@ -7,7 +7,7 @@ import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/
 export default class YakuakeGnomeExtensionPreferences extends ExtensionPreferences {
 
     fillPreferencesWindow(window) {
-        this.settings = window._settings = this.getSettings("org.gnome.shell.extensions.yakuake-extension");
+        window._settings = this.getSettings();
 
         const page = new Adw.PreferencesPage({
             title: 'Yakuake Gnome Extension',
@@ -26,11 +26,11 @@ export default class YakuakeGnomeExtensionPreferences extends ExtensionPreferenc
             visible: true
         });
 
-        let shortcut = this.settings.get_value('my-shortcut').deep_unpack()
+        let shortcut = window._settings.get_value('my-shortcut').deep_unpack()
         entry.set_text(shortcut[0]);
 
         entry.connect('changed', () => {
-            this.settings.set_value('my-shortcut', GLib.Variant.new('as', [entry.get_text()]));
+            window._settings.set_value('my-shortcut', GLib.Variant.new('as', [entry.get_text()]));
         });
 
         group.add(entry);

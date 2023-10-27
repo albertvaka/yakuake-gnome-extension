@@ -7,13 +7,7 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 export default class YakuakeGnomeExtension extends Extension {
 
-  constructor(metadata) {
-    super(metadata);
-    this._proxy = null;
-  }
-
   enable() {
-
     // This is needed in XWayland (ie: if QT_QPA_PLATFORM=wayland is not set) so the window gets focus
     this._wincreated = global.display.connect('window-demands-attention', (display, window) => {
       // Try to detect the Yakuake window somehow
@@ -22,7 +16,7 @@ export default class YakuakeGnomeExtension extends Extension {
       }
     });
 
-    let settings = this.getSettings("org.gnome.shell.extensions.yakuake-extension");
+    let settings = this.getSettings();
     Main.wm.addKeybinding("my-shortcut", settings,
       Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
       Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
@@ -51,6 +45,7 @@ export default class YakuakeGnomeExtension extends Extension {
   }
 
   disable() {
+    this._proxy = null;
     global.display.disconnect(this._wincreated);
     Main.wm.removeKeybinding("my-shortcut");
   }
