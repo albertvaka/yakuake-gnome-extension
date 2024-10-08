@@ -12,5 +12,5 @@ Or clone this repo in `~/.local/share/gnome-shell/extensions/yakuake-extension@k
 
 #### Unfixed issues
 
-If used with `QT_QPA_PLATFORM=wayland` set in `~/.pam_environment` (which makes Qt apps use the wayland backend), the window appears centered instead of from the top.
+On Wayland the window appears centered instead of from the top.
 
