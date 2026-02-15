@@ -1,4 +1,5 @@
 
+import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Shell from 'gi://Shell';
 import Meta from 'gi://Meta';
@@ -8,11 +9,21 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 export default class YakuakeGnomeExtension extends Extension {
 
   enable() {
-    // This is needed in XWayland (ie: if QT_QPA_PLATFORM=wayland is not set) so the window gets focus
-    this._wincreated = global.display.connect('window-demands-attention', (display, window) => {
-      // Try to detect the Yakuake window somehow
-      if (window.title.includes("Yakuake") && window.is_above()) {
+    this._positionSignals = [];
+    this._pendingSourceId = null;
+
+    // This signal fires when a window requests attention (XWayland-only)
+    this._windowDemandsAttentionId = global.display.connect('window-demands-attention', (display, window) => {
+      if (this._isYakuakeWindow(window)) {
+        this._moveToTop(window);
         Main.activateWindow(window);
+      }
+    });
+
+    // Catch first launch where the window doesn't exist yet
+    this._windowCreatedId = global.display.connect('window-created', (display, window) => {
+      if (this._isYakuakeWindow(window)) {
+        this._positionWhenReady(window);
       }
     });
 
@@ -22,32 +33,109 @@ export default class YakuakeGnomeExtension extends Extension {
       Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
       () => {
 
-        if (this._proxy == null) {
-          this._proxy = new Gio.DBusProxy({
-            g_connection: Gio.DBus.session,
-            g_name: "org.kde.yakuake",
-            g_object_path: "/yakuake/window",
-            g_interface_name: "org.kde.yakuake"
-          });
+        // Check if Yakuake is running by looking for its D-Bus name
+        let result = Gio.DBus.session.call_sync(
+          "org.freedesktop.DBus",
+          "/org/freedesktop/DBus",
+          "org.freedesktop.DBus",
+          "NameHasOwner",
+          new GLib.Variant('(s)', ['org.kde.yakuake']),
+          null, 0, -1, null
+        );
+        let isRunning = result.get_child_value(0).get_boolean();
+
+        if (!isRunning) {
+          // Yakuake isn't running, launch it
+          GLib.spawn_command_line_async('yakuake');
+          return;
         }
 
-        this._proxy.call_sync(
-          "org.kde.yakuake.toggleWindowState",
-          null, // method args
-          0,    // call flags
-          -1,   // timeout
-          null  // cancellable
-        );
-        //too early to do this here
-        //let windows = global.display.get_workspace_manager().get_active_workspace().list_windows();
-        //windows.filter(w => w.title.includes("Yakuake") && w.is_above() && w.is_on_all_workspaces()).forEach(w => Main.activateWindow(w));
+        this._toggleAndPosition();
       });
   }
 
   disable() {
-    this._proxy = null;
-    global.display.disconnect(this._wincreated);
+    this._clearPendingTimeout();
+
+    for (const sig of this._positionSignals) {
+      try { sig.window.disconnect(sig.id); } catch (e) { /* window may be destroyed */ }
+    }
+    this._positionSignals = [];
+
+    global.display.disconnect(this._windowDemandsAttentionId);
+    global.display.disconnect(this._windowCreatedId);
     Main.wm.removeKeybinding("my-shortcut");
+  }
+
+  _isYakuakeWindow(window) {
+    if (!window) return false;
+    const wmClass = window.get_wm_class();
+    if (wmClass && wmClass.toLowerCase() === 'yakuake') return true;
+    const title = window.get_title();
+    if (title && title.includes('Yakuake')) return true;
+    return false;
+  }
+
+  _moveToTop(window) {
+    const monitorIndex = window.get_monitor();
+    const monitorGeom = global.display.get_monitor_geometry(monitorIndex);
+    const frameRect = window.get_frame_rect();
+    const x = monitorGeom.x + Math.round((monitorGeom.width - frameRect.width) / 2);
+    window.move_frame(false, x, monitorGeom.y);
+  }
+
+  _findAndPositionYakuake() {
+    const windows = global.display.list_all_windows();
+    for (const w of windows) {
+      if (this._isYakuakeWindow(w)) {
+        this._moveToTop(w);
+        Main.activateWindow(w);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // For newly created windows, wait until the compositor has placed them before repositioning
+  _positionWhenReady(window) {
+    const sigId = window.connect('position-changed', () => {
+      window.disconnect(sigId);
+      this._positionSignals = this._positionSignals.filter(s => s.id !== sigId);
+      this._moveToTop(window);
+      Main.activateWindow(window);
+    });
+    this._positionSignals.push({ window, id: sigId });
+  }
+
+  _toggleAndPosition() {
+    Gio.DBus.session.call_sync(
+      "org.kde.yakuake",
+      "/yakuake/window",
+      "org.kde.yakuake",
+      "toggleWindowState",
+      null, null, 0, -1, null
+    );
+
+    if (this._findAndPositionYakuake())
+      return;
+
+    this._clearPendingTimeout();
+    let attempts = 0;
+    this._pendingSourceId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+      attempts++;
+      if (this._findAndPositionYakuake() || attempts >= 10) {
+        this._pendingSourceId = null;
+        return GLib.SOURCE_REMOVE;
+      }
+      return GLib.SOURCE_CONTINUE;
+    });
+  }
+
+  _clearPendingTimeout() {
+    if (this._pendingSourceId) {
+      GLib.Source.remove(this._pendingSourceId);
+      this._pendingSourceId = null;
+    }
   }
 
 }
