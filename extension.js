@@ -9,23 +9,23 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 export default class YakuakeGnomeExtension extends Extension {
 
   enable() {
-    this._positionSignals = [];
+    this._pendingPositionWindows = new Set();
     this._pendingSourceId = null;
 
-    // This signal fires when a window requests attention (XWayland-only)
-    this._windowDemandsAttentionId = global.display.connect('window-demands-attention', (display, window) => {
+    // This signal fires when a window requests attention (eg. on XWayland)
+    global.display.connectObject('window-demands-attention', (display, window) => {
       if (this._isYakuakeWindow(window)) {
         this._moveToTop(window);
         Main.activateWindow(window);
       }
-    });
+    }, this);
 
     // Catch first launch where the window doesn't exist yet
-    this._windowCreatedId = global.display.connect('window-created', (display, window) => {
+    global.display.connectObject('window-created', (display, window) => {
       if (this._isYakuakeWindow(window)) {
         this._positionWhenReady(window);
       }
-    });
+    }, this);
 
     let settings = this.getSettings();
     Main.wm.addKeybinding("my-shortcut", settings,
@@ -57,13 +57,11 @@ export default class YakuakeGnomeExtension extends Extension {
   disable() {
     this._clearPendingTimeout();
 
-    for (const sig of this._positionSignals) {
-      try { sig.window.disconnect(sig.id); } catch (e) { /* window may be destroyed */ }
-    }
-    this._positionSignals = [];
+    for (const w of this._pendingPositionWindows)
+      w.disconnectObject(this);
+    this._pendingPositionWindows.clear();
 
-    global.display.disconnect(this._windowDemandsAttentionId);
-    global.display.disconnect(this._windowCreatedId);
+    global.display.disconnectObject(this);
     Main.wm.removeKeybinding("my-shortcut");
   }
 
@@ -98,13 +96,13 @@ export default class YakuakeGnomeExtension extends Extension {
 
   // For newly created windows, wait until the compositor has placed them before repositioning
   _positionWhenReady(window) {
-    const sigId = window.connect('position-changed', () => {
-      window.disconnect(sigId);
-      this._positionSignals = this._positionSignals.filter(s => s.id !== sigId);
+    this._pendingPositionWindows.add(window);
+    window.connectObject('position-changed', () => {
+      window.disconnectObject(this);
+      this._pendingPositionWindows.delete(window);
       this._moveToTop(window);
       Main.activateWindow(window);
-    });
-    this._positionSignals.push({ window, id: sigId });
+    }, this);
   }
 
   _toggleAndPosition() {
