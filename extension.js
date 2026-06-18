@@ -68,9 +68,12 @@ export default class YakuakeGnomeExtension extends Extension {
   _isYakuakeWindow(window) {
     if (!window) return false;
     const wmClass = window.get_wm_class();
-    if (wmClass && wmClass.toLowerCase() === 'yakuake') return true;
+    if (wmClass) {
+      const cls = wmClass.toLowerCase();
+      if (cls === 'yakuake' || cls === 'org.kde.yakuake') return true;
+    }
     const title = window.get_title();
-    if (title && title.includes('Yakuake')) return true;
+    if (title && title === 'Yakuake') return true;
     return false;
   }
 
