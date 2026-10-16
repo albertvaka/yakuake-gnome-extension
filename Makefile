@@ -12,4 +12,5 @@ zip:
 		-x ".git/*" \
 		-x ".claude/*" \
 		-x "Makefile" \
-		-x ".gitignore"
+		-x ".gitignore" \
+		-x "schemas/gschemas.compiled"
