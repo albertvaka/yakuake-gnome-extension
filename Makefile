@@ -11,4 +11,5 @@ zip:
 		-x "._*" \
 		-x ".git/*" \
 		-x ".claude/*" \
-		-x "Makefile"
+		-x "Makefile" \
+		-x ".gitignore"
