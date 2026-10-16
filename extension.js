@@ -46,7 +46,7 @@ export default class YakuakeGnomeExtension extends Extension {
 
         if (!isRunning) {
           // Yakuake isn't running, launch it
-          GLib.spawn_command_line_async('yakuake');
+          this._launchYakuake();
           return;
         }
 
@@ -63,6 +63,17 @@ export default class YakuakeGnomeExtension extends Extension {
 
     global.display.disconnectObject(this);
     Main.wm.removeKeybinding("my-shortcut");
+  }
+
+  _launchYakuake() {
+    // Qt re-registers the toplevel under the same xdg-session-management name
+    // every time Yakuake is shown again, and Mutter kills the client with
+    // "Name of toplevel was already in use". Keep Qt from using the protocol.
+    const launcher = new Gio.SubprocessLauncher({ flags: Gio.SubprocessFlags.NONE });
+    const disabled = GLib.getenv('QT_WAYLAND_DISABLED_INTERFACES');
+    launcher.setenv('QT_WAYLAND_DISABLED_INTERFACES',
+      disabled ? `${disabled},xdg_session_manager_v1` : 'xdg_session_manager_v1', true);
+    launcher.spawnv(['yakuake']);
   }
 
   _isYakuakeWindow(window) {
