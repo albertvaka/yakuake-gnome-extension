@@ -3,6 +3,7 @@
 .PHONY: zip
 
 zip:
+	@rm extension.zip
 	@zip -r extension.zip . \
 		-x "extension.zip" \
 		-x "*.DS_Store" \
